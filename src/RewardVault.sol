@@ -10,6 +10,9 @@ using AccountLib for Account;
 using StaleAccountLib for StaleAccount;
 using SafeERC20 for IERC20;
 
+/// @title Reward Vault
+/// @author Will Johnston
+/// @notice A vault that allows users to deposit tokens and earn a reward token at a specified rate
 contract RewardVault {
     StaleState state;
 
@@ -21,27 +24,43 @@ contract RewardVault {
         });
     }
 
+    /**
+     * @notice Deposit tokens to the vault
+     */
     function deposit(uint256 amount) external returns (uint256) {
         return state.getUpdated().depositFrom(msg.sender, amount);
     }
 
+    /**
+     * @notice Returns the balance of a given user
+     */
     function balanceOf(address operator) external view returns (uint256) {
         return state.balanceOf(operator);
     }
 
+    /**
+     * @notice Withdraw deposit tokens
+     */
     function withdraw(uint256 amount) external returns (uint256) {
         return state.getUpdated().withdrawFrom(msg.sender, amount);
     }
 
+    /**
+     * @notice Claim all outstanding reward tokens
+     */
     function claim() external returns (uint256) {
         return state.getUpdated().claimFrom(msg.sender);
     }
 
+    /**
+     * @notice Returns the amount of reward tokens that will be transferred on
+     *          a call to `.claim`
+     */
     function previewClaim() external view returns (uint256) {
         return state.rewardsClaimable(msg.sender);
     }
 
-    function setRewardsPerTokenPerSecond(uint256 newRewardsPerTokenPerSecond) external {
+    function setRewardsPerTokenPerSecond(uint256 newRewardsPerTokenPerSecond) external onlyAdmin {
         return state.getUpdated().setRewardsPerTokenPerSecondFrom(msg.sender, newRewardsPerTokenPerSecond);
     }
 
