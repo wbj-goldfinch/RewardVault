@@ -57,7 +57,7 @@ contract RewardVault {
      *          a call to `.claim`
      */
     function previewClaim() external view returns (uint256) {
-        return state.rewardsClaimable(msg.sender);
+        return state.previewClaim(msg.sender);
     }
 
     function setRewardsPerTokenPerSecond(uint256 newRewardsPerTokenPerSecond) external onlyAdmin {
@@ -116,7 +116,7 @@ library StateLib {
     }
 
     function previewClaimFrom(State storage s, address from) internal view returns (uint256) {
-        return s.__accounts[from].rewardsClaimable(s);
+        return s.__accounts[from].previewClaim(s);
     }
 
     function transferDepositTo(State storage s, address to, uint256 amount) internal {
@@ -176,7 +176,7 @@ library StaleStateLib {
         s.__inner.__rewardsPerTokenPerSecond = rewardsPerTokenPerSecond;
     }
 
-    function rewardsClaimable(StaleState storage s, address operator) internal view returns (uint256) {
+    function previewClaim(StaleState storage s, address operator) internal view returns (uint256) {
         return s.__inner.previewClaimFrom(operator);
     }
 
@@ -209,7 +209,7 @@ library AccountLib {
         return a.__balance;
     }
 
-    function rewardsClaimable(Account storage a, State storage s) internal view returns (uint256) {
+    function previewClaim(Account storage a, State storage s) internal view returns (uint256) {
         uint256 rewardsPerTokenSinceLastUpdate = s.__rewardPerTokenAcc - a.__rewardsPerTokenAcc;
         uint256 rewardsSinceLastUpdated = (rewardsPerTokenSinceLastUpdate * a.__balance) / 1e18;
         return a.__rewardsClaimable + rewardsSinceLastUpdated;
@@ -238,8 +238,8 @@ struct StaleAccount {
 }
 
 library StaleAccountLib {
-    function rewardsClaimable(StaleAccount storage a, State storage s) internal view returns (uint256) {
-        return a.__inner.rewardsClaimable(s);
+    function previewClaim(StaleAccount storage a, State storage s) internal view returns (uint256) {
+        return a.__inner.previewClaim(s);
     }
 
     function balance(StaleAccount storage a) internal view returns (uint256) {
@@ -249,7 +249,7 @@ library StaleAccountLib {
     function getUpdated(StaleAccount storage a, State storage s) internal returns (Account storage) {
         Account storage inner = a.__inner;
 
-        inner.__rewardsClaimable = inner.rewardsClaimable(s);
+        inner.__rewardsClaimable = inner.previewClaim(s);
         inner.__rewardsPerTokenAcc = s.__rewardPerTokenAcc;
 
         return inner;
